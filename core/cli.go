@@ -4,7 +4,6 @@ import (
 	"github.com/urfave/cli/v2"
 	"netspy/core/arp"
 	"netspy/core/icmp"
-	. "netspy/core/log"
 	"netspy/core/ping"
 	"netspy/core/tcp"
 	"netspy/core/udp"
@@ -17,47 +16,65 @@ func Execute() {
 		Name:  "netspy",
 		Usage: "powerful intranet segment spy tool",
 		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:    "net",
-				Aliases: []string{"n"},
-				Usage:   "specify spy network segment(172,192,10,all)",
-				Value:   "all",
+			&cli.StringSliceFlag{
+				Name:    "cidr",
+				Aliases: []string{"c"},
+				Usage:   "specify spy cidr(e.g. 172.16.0.0/12)",
 			},
-			//&cli.StringFlag{
-			//	Name:    "cidr",
-			//	Aliases: []string{"c"},
-			//	Usage:   "specify spy cidr",
-			//},
 			// todo 目前cli v2.3有bug 不能使用IntSliceFlag 等待cli发布新版本使用IntSliceFlag
 			//&cli.IntSliceFlag{
 			//	Name:    "number",
-			//	Aliases: []string{"g"},
-			//	Usage:   "tail number of the gateway",
+			//	Aliases: []string{"i"},
+			//	Usage:   "tail number of the ip",
 			//	Value:   cli.NewIntSlice(1, 2, 254, 255),
 			//},
 			&cli.StringSliceFlag{
-				Name:    "number",
-				Aliases: []string{"g"},
-				Usage:   "tail number of the ip",
-				Value:   cli.NewStringSlice("1", "2", "254", "255"),
+				Name:    "end",
+				Aliases: []string{"e"},
+				Usage:   "specify the ending digits of the ip",
+				Value:   cli.NewStringSlice("1", "254", "2", "255"),
 			},
 			&cli.IntFlag{
-				Name:    "thread",
-				Aliases: []string{"t"},
-				Usage:   "number of concurrency",
-				Value:   200,
+				Name:    "random",
+				Aliases: []string{"r"},
+				Usage:   "the number of random ending digits in ip",
+				Value:   1,
+			},
+			&cli.IntFlag{
+				Name:        "thread",
+				Aliases:     []string{"t"},
+				Usage:       "number of concurrency",
+				DefaultText: "cpu * 20",
 			},
 			&cli.IntFlag{
 				Name:    "timeout",
 				Aliases: []string{"m"},
-				Usage:   "packet sending timeout",
-				Value:   3,
+				Usage:   "packet sending timeout millisecond",
+				Value:   500,
 			},
 			&cli.PathFlag{
 				Name:    "output",
 				Aliases: []string{"o"},
-				Usage:   "output result to file in text format",
-				Value:   "result.txt",
+				Usage:   "output alive result to file in text format",
+				Value:   "alive.txt",
+			},
+			&cli.BoolFlag{
+				Name:    "rapid",
+				Aliases: []string{"x"},
+				Usage:   "rapid spy mode",
+				Value:   false,
+			},
+			&cli.BoolFlag{
+				Name:    "special",
+				Aliases: []string{"i"},
+				Usage:   "spy special intranet",
+				Value:   false,
+			},
+			&cli.BoolFlag{
+				Name:    "force",
+				Aliases: []string{"f"},
+				Usage:   "force spy all generated ip",
+				Value:   false,
 			},
 			&cli.BoolFlag{
 				Name:    "silent",
@@ -169,12 +186,12 @@ func Execute() {
 			},
 		},
 		Before: func(c *cli.Context) error {
-			InitLog(c)
+			Init(c)
 			return nil
 		},
 	}
 	err := app.Run(os.Args)
 	if err != nil {
-		Log.Fatal(err)
+		panic(err)
 	}
 }
